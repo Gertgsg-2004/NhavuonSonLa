@@ -1,0 +1,874 @@
+// ============================================================================
+// Nhà Vườn Sơn La — Thiết kế CSDL (PostgreSQL + Prisma)
+// Nền tảng bán sỉ nông sản B2B: báo giá, giá bậc số lượng, mùa vụ, lô hàng,
+// công nợ, giao xe tải/container. Xem giải thích tại docs/03.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================== ENUMS ======================================
+
+enum UserRole {
+  DEALER // Đại lý: thấy giá sỉ, đặt hàng, lịch sử
+  STAFF // Nhân viên: xử lý báo giá, đơn hàng, kho
+  ADMIN // Toàn quyền
+}
+
+enum UserStatus {
+  PENDING // Đại lý mới đăng ký, chờ duyệt
+  ACTIVE
+  LOCKED
+}
+
+enum CustomerType {
+  DAI_LY
+  CUA_HANG // Cửa hàng trái cây
+  SIEU_THI
+  THUONG_LAI
+  CHO_DAU_MOI
+  NHA_HANG
+  XUAT_KHAU // Công ty xuất khẩu
+  KHAC
+}
+
+enum ProductStatus {
+  ACTIVE
+  HIDDEN // Admin ẩn
+  OUT_OF_SEASON // Hết mùa — vẫn hiển thị, cho đặt trước vụ sau
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum CertificationType {
+  VIETGAP
+  GLOBALGAP
+  ORGANIC
+  HACCP
+  OTHER
+}
+
+enum SeasonStatus {
+  UPCOMING // Sắp vào vụ
+  HARVESTING // Đang thu hoạch
+  ENDED
+}
+
+enum BatchStatus {
+  HARVESTING // Đang thu hoạch lô này
+  IN_STOCK
+  SOLD_OUT
+  DISCARDED // Hủy do hư hỏng
+}
+
+enum InventoryLogType {
+  HARVEST_IN // Nhập từ thu hoạch
+  PURCHASE_IN // Nhập mua ngoài
+  SALE_OUT // Xuất bán
+  RETURN_IN // Khách trả
+  DAMAGE // Hao hụt, hư hỏng
+  ADJUSTMENT // Kiểm kê điều chỉnh
+}
+
+enum QuoteStatus {
+  PENDING // Khách vừa gửi
+  PROCESSING // Nhân viên đang xử lý
+  QUOTED // Đã gửi báo giá (PDF)
+  ACCEPTED // Khách đồng ý
+  REJECTED // Khách từ chối
+  EXPIRED // Quá hạn hiệu lực
+  CONVERTED // Đã chuyển thành đơn hàng
+}
+
+enum OrderType {
+  STANDARD
+  PRE_ORDER // Đặt trước/đặt cọc giữ hàng theo mùa vụ
+}
+
+enum OrderStatus {
+  NEW // Mới
+  QUOTED // Đã báo giá
+  CONFIRMED // Đã xác nhận (giữ chỗ tồn kho)
+  HARVESTING // Đang thu hoạch
+  PACKING // Đóng gói
+  SHIPPING // Đang giao (trừ kho thật)
+  COMPLETED // Hoàn thành
+  CANCELLED // Hủy
+}
+
+enum OrderPaymentStatus {
+  UNPAID
+  DEPOSIT // Đã đặt cọc
+  PARTIAL // Thanh toán một phần
+  PAID
+}
+
+enum PaymentMethod {
+  COD
+  BANK_TRANSFER
+  VNPAY
+  MOMO
+  ZALOPAY
+}
+
+enum PaymentType {
+  DEPOSIT // Tiền cọc
+  PARTIAL
+  FULL
+  DEBT_PAYMENT // Thanh toán công nợ
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum ShipmentMethod {
+  OWN_TRUCK // Xe tải nhà vườn
+  CONTAINER
+  THIRD_PARTY // Thuê đơn vị vận chuyển
+  CUSTOMER_PICKUP // Khách tự lấy tại vườn
+}
+
+enum ShipmentStatus {
+  PENDING
+  LOADING // Đang lên hàng
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+}
+
+enum PostCategory {
+  KY_THUAT_TRONG
+  MUA_VU
+  XUAT_KHAU
+  GIA_THI_TRUONG
+  TIN_TUC
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ContactStatus {
+  NEW
+  PROCESSING
+  DONE
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+  ZALO_OA
+  TELEGRAM
+  PUSH
+}
+
+enum CouponType {
+  PERCENT
+  FIXED_AMOUNT
+}
+
+// ========================= NGƯỜI DÙNG & KHÁCH HÀNG =========================
+
+model User {
+  id               String     @id @default(cuid())
+  email            String     @unique
+  phone            String?
+  passwordHash     String
+  fullName         String
+  role             UserRole   @default(DEALER)
+  status           UserStatus @default(PENDING)
+  avatarUrl        String?
+  refreshTokenHash String? // hash refresh token đang hiệu lực (xoay vòng)
+  twoFactorSecret  String? // TOTP — bắt buộc với ADMIN
+  twoFactorEnabled Boolean    @default(false)
+  lastLoginAt      DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  // Đại lý thuộc về một hồ sơ khách hàng (doanh nghiệp)
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  quotesAssigned     Quote[]              @relation("QuoteAssignee")
+  ordersCreated      Order[]              @relation("OrderCreator")
+  statusChanges      OrderStatusHistory[]
+  inventoryLogs      InventoryLog[]
+  customerActivities CustomerActivity[]
+  posts              Post[]
+  notifications      Notification[]
+  activityLogs       ActivityLog[]
+
+  @@index([role, status])
+  @@map("users")
+}
+
+model Customer {
+  id              String       @id @default(cuid())
+  code            String       @unique // KH-0001
+  customerType    CustomerType @default(DAI_LY)
+  companyName     String
+  taxCode         String? // Mã số thuế
+  contactName     String
+  phone           String
+  email           String?
+  address         String?
+  province        String? // Tỉnh/TP — phục vụ báo cáo theo vùng
+  creditLimit     Decimal      @default(0) @db.Decimal(14, 2) // Hạn mức công nợ
+  currentDebt     Decimal      @default(0) @db.Decimal(14, 2) // Công nợ hiện tại
+  paymentTermDays Int          @default(0) // Thanh toán sau X ngày
+  discountRate    Decimal      @default(0) @db.Decimal(5, 2) // % chiết khấu riêng
+  notes           String?
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  users      User[]
+  quotes     Quote[]
+  orders     Order[]
+  payments   Payment[]
+  activities CustomerActivity[]
+
+  @@index([customerType])
+  @@index([province])
+  @@map("customers")
+}
+
+// CRM: ghi chú giao dịch, cuộc gọi, chính sách riêng từng khách
+model CustomerActivity {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  staffId    String?
+  staff      User?    @relation(fields: [staffId], references: [id])
+  type       String // CALL | MEETING | NOTE | POLICY
+  content    String
+  createdAt  DateTime @default(now())
+
+  @@index([customerId, createdAt])
+  @@map("customer_activities")
+}
+
+// ============================== SẢN PHẨM ===================================
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  imageUrl    String?
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  seoTitle    String?
+  seoDescription String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Farm {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  region       String // VD: Yên Châu, Mộc Châu, Sông Mã
+  address      String?
+  areaHectares Decimal? @db.Decimal(10, 2)
+  description  String?
+  coverImage   String?
+  images       String[] @default([])
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  products       Product[]
+  certifications Certification[]
+  batches        HarvestBatch[]
+
+  @@map("farms")
+}
+
+model Product {
+  id         String        @id @default(cuid())
+  name       String
+  slug       String        @unique
+  sku        String?       @unique
+  categoryId String
+  category   Category      @relation(fields: [categoryId], references: [id])
+  farmId     String?
+  farm       Farm?         @relation(fields: [farmId], references: [id])
+  status     ProductStatus @default(ACTIVE)
+
+  shortDescription String?
+  description      String? // rich text/markdown
+  origin           String? // Nguồn gốc giống
+  growingRegion    String? // Vùng trồng (hiển thị + bộ lọc)
+  harvestPeriod    String? // Mô tả thời gian thu hoạch, VD "Tháng 5 – 8"
+
+  unit             String  @default("kg")
+  minOrderQuantity Decimal @default(10) @db.Decimal(12, 2) // SL đặt tối thiểu
+
+  // 3 mức giá nền tham khảo (spec mục 6); giá thực tế theo bậc ở ProductPriceTier
+  retailPrice    Decimal? @db.Decimal(14, 2) // Giá lẻ tham khảo
+  wholesalePrice Decimal? @db.Decimal(14, 2) // Giá sỉ nền
+  dealerPrice    Decimal? @db.Decimal(14, 2) // Giá đại lý nền
+  isPriceVisible Boolean  @default(false) // false: khách lẻ thấy "Liên hệ báo giá"
+
+  stockQuantity     Decimal @default(0) @db.Decimal(12, 2) // tổng tồn (đồng bộ từ inventories)
+  lowStockThreshold Decimal @default(100) @db.Decimal(12, 2) // ngưỡng cảnh báo sắp hết
+
+  isFeatured      Boolean @default(false)
+  isExportQuality Boolean @default(false) // Đạt chuẩn xuất khẩu
+
+  seoTitle       String?
+  seoDescription String?
+  viewCount      Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  media          ProductMedia[]
+  priceTiers     ProductPriceTier[]
+  seasons        FruitSeason[]
+  certifications Certification[]
+  batches        HarvestBatch[]
+  inventories    Inventory[]
+  inventoryLogs  InventoryLog[]
+  quoteItems     QuoteItem[]
+  orderItems     OrderItem[]
+
+  @@index([categoryId, status])
+  @@index([growingRegion])
+  @@index([isFeatured])
+  @@map("products")
+}
+
+model ProductMedia {
+  id        String    @id @default(cuid())
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type      MediaType @default(IMAGE)
+  url       String // Cloudinary URL hoặc YouTube URL
+  alt       String?
+  sortOrder Int       @default(0)
+
+  @@index([productId])
+  @@map("product_media")
+}
+
+// Giá bậc thang theo số lượng: 10kg / 50kg / 100kg / 500kg / 1 tấn...
+model ProductPriceTier {
+  id          String  @id @default(cuid())
+  productId   String
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  minQuantity Decimal @db.Decimal(12, 2) // kg — bậc áp dụng từ khối lượng này
+  price       Decimal @db.Decimal(14, 2) // đơn giá/kg
+  label       String? // "Từ 1 tấn"
+
+  @@unique([productId, minQuantity])
+  @@map("product_price_tiers")
+}
+
+// Chứng nhận chất lượng (PDF/ảnh) — gắn cho sản phẩm hoặc cả nông trại
+model Certification {
+  id        String            @id @default(cuid())
+  type      CertificationType
+  name      String // "VietGAP TT-19-xx"
+  fileUrl   String? // PDF trên S3
+  imageUrl  String?
+  issuedBy  String?
+  issuedAt  DateTime?
+  expiresAt DateTime?
+  productId String?
+  product   Product?          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  farmId    String?
+  farm      Farm?             @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  createdAt DateTime          @default(now())
+
+  @@index([productId])
+  @@index([farmId])
+  @@map("certifications")
+}
+
+// ============================ MÙA VỤ & KHO ================================
+
+// Mùa vụ: lịch thu hoạch + sản lượng kế hoạch/thực tế
+model FruitSeason {
+  id               String       @id @default(cuid())
+  productId        String
+  product          Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name             String // "Vụ xoài Yên Châu 2026"
+  year             Int
+  startMonth       Int // 1-12
+  endMonth         Int
+  peakMonth        Int? // tháng rộ nhất
+  region           String?
+  estimatedYieldKg Decimal?     @db.Decimal(14, 2) // sản lượng ước tính
+  actualYieldKg    Decimal?     @db.Decimal(14, 2) // thực tế (tổng các lô)
+  status           SeasonStatus @default(UPCOMING)
+  allowPreOrder    Boolean      @default(true) // cho đặt cọc trước vụ
+  note             String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  batches   HarvestBatch[]
+  preOrders Order[]
+
+  @@index([productId, year])
+  @@index([status])
+  @@map("fruit_seasons")
+}
+
+model Warehouse {
+  id         String   @id @default(cuid())
+  name       String
+  address    String?
+  capacityKg Decimal? @db.Decimal(14, 2)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  inventories Inventory[]
+
+  @@map("warehouses")
+}
+
+// Lô thu hoạch — đơn vị truy xuất nguồn gốc (in QR trên thùng hàng)
+model HarvestBatch {
+  id           String      @id @default(cuid())
+  code         String      @unique // XYC-20260612-01
+  productId    String
+  product      Product     @relation(fields: [productId], references: [id])
+  farmId       String?
+  farm         Farm?       @relation(fields: [farmId], references: [id])
+  seasonId     String?
+  season       FruitSeason? @relation(fields: [seasonId], references: [id])
+  harvestDate  DateTime
+  quantityKg   Decimal     @db.Decimal(12, 2) // thu hoạch được
+  remainingKg  Decimal     @db.Decimal(12, 2) // còn lại chưa bán
+  qualityGrade String? // A | B | C
+  status       BatchStatus @default(IN_STOCK)
+  note         String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  inventories Inventory[]
+  orderItems  OrderItem[]
+
+  @@index([productId, harvestDate])
+  @@map("harvest_batches")
+}
+
+// Tồn kho theo (kho × sản phẩm × lô)
+model Inventory {
+  id               String        @id @default(cuid())
+  warehouseId      String
+  warehouse        Warehouse     @relation(fields: [warehouseId], references: [id])
+  productId        String
+  product          Product       @relation(fields: [productId], references: [id])
+  batchId          String?
+  batch            HarvestBatch? @relation(fields: [batchId], references: [id])
+  quantity         Decimal       @default(0) @db.Decimal(12, 2)
+  reservedQuantity Decimal       @default(0) @db.Decimal(12, 2) // đơn CONFIRMED giữ chỗ
+  updatedAt        DateTime      @updatedAt
+
+  logs InventoryLog[]
+
+  @@unique([warehouseId, productId, batchId])
+  @@map("inventories")
+}
+
+// Sổ biến động kho — bất biến, chỉ ghi thêm
+model InventoryLog {
+  id          String           @id @default(cuid())
+  inventoryId String?
+  inventory   Inventory?       @relation(fields: [inventoryId], references: [id])
+  productId   String
+  product     Product          @relation(fields: [productId], references: [id])
+  type        InventoryLogType
+  quantity    Decimal          @db.Decimal(12, 2) // dương = nhập, âm = xuất
+  orderId     String?
+  order       Order?           @relation(fields: [orderId], references: [id])
+  note        String?
+  createdById String?
+  createdBy   User?            @relation(fields: [createdById], references: [id])
+  createdAt   DateTime         @default(now())
+
+  @@index([productId, createdAt])
+  @@map("inventory_logs")
+}
+
+// ========================== BÁO GIÁ & ĐƠN HÀNG =============================
+
+model Quote {
+  id     String      @id @default(cuid())
+  code   String      @unique // BG-2026-00001
+  status QuoteStatus @default(PENDING)
+
+  // Liên hệ — bắt buộc với khách vãng lai; đại lý tự điền từ hồ sơ
+  fullName    String
+  companyName String?
+  phone       String
+  email       String?
+  note        String?
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  assignedToId String?
+  assignedTo   User?     @relation("QuoteAssignee", fields: [assignedToId], references: [id])
+  validUntil   DateTime? // hạn hiệu lực báo giá
+  totalQuoted  Decimal?  @db.Decimal(14, 2)
+  pdfUrl       String? // file PDF báo giá đã sinh
+  internalNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items QuoteItem[]
+  order Order? // đơn hàng được chuyển từ báo giá này
+
+  @@index([status, createdAt])
+  @@index([customerId])
+  @@map("quotes")
+}
+
+model QuoteItem {
+  id          String   @id @default(cuid())
+  quoteId     String
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Decimal  @db.Decimal(12, 2)
+  unit        String   @default("kg")
+  quotedPrice Decimal? @db.Decimal(14, 2) // nhân viên điền khi báo giá
+  note        String?
+
+  @@index([quoteId])
+  @@map("quote_items")
+}
+
+model Order {
+  id     String      @id @default(cuid())
+  code   String      @unique // DH-2026-00001
+  type   OrderType   @default(STANDARD)
+  status OrderStatus @default(NEW)
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  quoteId String? @unique
+  quote   Quote?  @relation(fields: [quoteId], references: [id])
+
+  // Đặt cọc trước mùa vụ (type = PRE_ORDER)
+  seasonId String?
+  season   FruitSeason? @relation(fields: [seasonId], references: [id])
+
+  // Giao hàng
+  deliveryDate     DateTime?
+  deliveryAddress  String?
+  deliveryProvince String?
+  receiverName     String?
+  receiverPhone    String?
+
+  // Tiền
+  subtotal       Decimal            @default(0) @db.Decimal(14, 2)
+  discountAmount Decimal            @default(0) @db.Decimal(14, 2)
+  shippingFee    Decimal            @default(0) @db.Decimal(14, 2)
+  totalAmount    Decimal            @default(0) @db.Decimal(14, 2)
+  depositAmount  Decimal            @default(0) @db.Decimal(14, 2) // cọc yêu cầu
+  paidAmount     Decimal            @default(0) @db.Decimal(14, 2)
+  paymentStatus  OrderPaymentStatus @default(UNPAID)
+  dueDate        DateTime? // hạn thanh toán công nợ
+  couponId       String?
+  coupon         Coupon?            @relation(fields: [couponId], references: [id])
+
+  customerNote String?
+  internalNote String?
+  cancelReason String?
+
+  createdById String?
+  createdBy   User?   @relation("OrderCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items         OrderItem[]
+  statusHistory OrderStatusHistory[]
+  payments      Payment[]
+  shipment      Shipment?
+  inventoryLogs InventoryLog[]
+
+  @@index([status, createdAt])
+  @@index([customerId, createdAt])
+  @@index([deliveryProvince])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String        @id @default(cuid())
+  orderId   String
+  order     Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product       @relation(fields: [productId], references: [id])
+  batchId   String? // lô hàng xuất — truy xuất nguồn gốc
+  batch     HarvestBatch? @relation(fields: [batchId], references: [id])
+  quantity  Decimal       @db.Decimal(12, 2)
+  unit      String        @default("kg")
+  unitPrice Decimal       @db.Decimal(14, 2)
+  subtotal  Decimal       @db.Decimal(14, 2)
+  note      String?
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id          String      @id @default(cuid())
+  orderId     String
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus  OrderStatus?
+  toStatus    OrderStatus
+  note        String?
+  changedById String?
+  changedBy   User?       @relation(fields: [changedById], references: [id])
+  createdAt   DateTime    @default(now())
+
+  @@index([orderId, createdAt])
+  @@map("order_status_history")
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  code           String        @unique // PT-2026-00001
+  orderId        String?
+  order          Order?        @relation(fields: [orderId], references: [id])
+  customerId     String
+  customer       Customer      @relation(fields: [customerId], references: [id])
+  amount         Decimal       @db.Decimal(14, 2)
+  method         PaymentMethod
+  type           PaymentType
+  status         PaymentStatus @default(PENDING)
+  transactionRef String? // mã giao dịch VNPay/MoMo/bank
+  paidAt         DateTime?
+  note           String?
+  createdAt      DateTime      @default(now())
+
+  @@index([customerId, createdAt])
+  @@index([orderId])
+  @@map("payments")
+}
+
+model Shipment {
+  id           String         @id @default(cuid())
+  orderId      String         @unique
+  order        Order          @relation(fields: [orderId], references: [id])
+  method       ShipmentMethod @default(OWN_TRUCK)
+  status       ShipmentStatus @default(PENDING)
+  vehiclePlate String? // biển số xe
+  vehicleType  String? // "Xe tải 5 tấn", "Container 20ft"
+  driverName   String?
+  driverPhone  String?
+  carrierName  String? // tên đơn vị vận chuyển thuê ngoài
+  distanceKm   Decimal?       @db.Decimal(10, 1)
+  costPerKm    Decimal?       @db.Decimal(14, 2)
+  shippingCost Decimal?       @db.Decimal(14, 2)
+  departedAt   DateTime?
+  deliveredAt  DateTime?
+  trackingNote String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@map("shipments")
+}
+
+// =============================== NỘI DUNG (CMS) ============================
+
+model Post {
+  id             String       @id @default(cuid())
+  title          String
+  slug           String       @unique
+  excerpt        String?
+  content        String // markdown/HTML
+  coverImage     String?
+  category       PostCategory @default(TIN_TUC)
+  tags           String[]     @default([])
+  status         PostStatus   @default(DRAFT)
+  publishedAt    DateTime?
+  authorId       String?
+  author         User?        @relation(fields: [authorId], references: [id])
+  seoTitle       String?
+  seoDescription String?
+  viewCount      Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([category])
+  @@map("posts")
+}
+
+model Banner {
+  id        String    @id @default(cuid())
+  title     String
+  imageUrl  String
+  linkUrl   String?
+  position  String    @default("HOME_HERO") // HOME_HERO | HOME_MIDDLE | ...
+  sortOrder Int       @default(0)
+  isActive  Boolean   @default(true)
+  startAt   DateTime?
+  endAt     DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([position, isActive])
+  @@map("banners")
+}
+
+model Video {
+  id           String   @id @default(cuid())
+  title        String
+  url          String // YouTube URL
+  thumbnailUrl String?
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@map("videos")
+}
+
+model GalleryImage {
+  id        String   @id @default(cuid())
+  title     String?
+  imageUrl  String
+  album     String? // "Vùng trồng", "Thu hoạch", "Đóng gói"
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("gallery_images")
+}
+
+// Cảm nhận/đánh giá của khách hàng (duyệt trước khi hiển thị)
+model Review {
+  id          String   @id @default(cuid())
+  authorName  String
+  companyName String?
+  avatarUrl   String?
+  content     String
+  rating      Int      @default(5) // 1-5
+  isApproved  Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@map("reviews")
+}
+
+model Faq {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("faqs")
+}
+
+model Coupon {
+  id             String     @id @default(cuid())
+  code           String     @unique
+  type           CouponType
+  value          Decimal    @db.Decimal(14, 2) // % hoặc số tiền
+  minOrderAmount Decimal?   @db.Decimal(14, 2)
+  maxDiscount    Decimal?   @db.Decimal(14, 2)
+  usageLimit     Int?
+  usedCount      Int        @default(0)
+  startAt        DateTime?
+  endAt          DateTime?
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+
+  orders Order[]
+
+  @@map("coupons")
+}
+
+model Contact {
+  id          String        @id @default(cuid())
+  fullName    String
+  companyName String?
+  email       String?
+  phone       String
+  subject     String?
+  message     String
+  status      ContactStatus @default(NEW)
+  createdAt   DateTime      @default(now())
+
+  @@index([status, createdAt])
+  @@map("contacts")
+}
+
+// =========================== HỆ THỐNG ======================================
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String?
+  user      User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel   NotificationChannel @default(IN_APP)
+  title     String
+  body      String?
+  data      Json?
+  isRead    Boolean             @default(false)
+  sentAt    DateTime?
+  createdAt DateTime            @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// Cấu hình key-value: hotline, Zalo, Facebook, Google Map, ngân hàng, footer...
+model Setting {
+  key       String   @id
+  value     Json
+  group     String   @default("general") // general | contact | seo | payment
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+// Audit log mọi thao tác quan trọng
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String // VD: product.update_price, order.change_status
+  entity    String?
+  entityId  String?
+  oldData   Json?
+  newData   Json?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}

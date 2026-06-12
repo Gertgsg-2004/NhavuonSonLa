@@ -1,0 +1,28 @@
+{
+  "name": "nhavuon-son-la",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Website bán sỉ nông sản Nhà Vườn Sơn La - B2B wholesale platform",
+  "scripts": {
+    "dev:api": "pnpm --filter @nhavuon/api start:dev",
+    "dev:web": "pnpm --filter @nhavuon/web dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "prisma:generate": "pnpm --filter @nhavuon/api prisma:generate",
+    "prisma:migrate": "pnpm --filter @nhavuon/api prisma:migrate",
+    "prisma:seed": "pnpm --filter @nhavuon/api prisma:seed"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "esbuild",
+      "sharp",
+      "@nestjs/core"
+    ]
+  }
+}
