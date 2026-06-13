@@ -26,6 +26,11 @@ pnpm-debug.log*
 .idea/
 .vscode/
 .DS_Store
+# Visual Studio (tự sinh khi mở folder — không phải file dự án)
+.vs/
+*.sqlite
+slnx.sqlite
+*.slnx
 
 # Test
 coverage/
