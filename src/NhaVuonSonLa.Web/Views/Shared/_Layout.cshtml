@@ -1,0 +1,79 @@
+@inject NhaVuonSonLa.Web.Services.QuoteCart Cart
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " | " : "")Nhà Vườn Sơn La</title>
+    <meta name="description" content="@(ViewData["Description"] ?? "Nhà vườn Sơn La cung cấp sỉ xoài Yên Châu, nhãn Sông Mã, mận hậu Mộc Châu... đạt chuẩn VietGAP/GlobalGAP. Giá theo bậc số lượng, giao xe tải & container toàn quốc.")" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" asp-controller="Home" asp-action="Index">
+                <span class="brand-logo">🍃</span>
+                <span class="brand-name">Nhà Vườn Sơn La</span>
+            </a>
+            <nav class="main-nav">
+                <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+                <a asp-controller="Products" asp-action="Index">Sản phẩm</a>
+                <a asp-controller="News" asp-action="Index">Tin tức</a>
+                <a asp-controller="Home" asp-action="GioiThieu">Giới thiệu</a>
+                <a asp-controller="Home" asp-action="LienHe">Liên hệ</a>
+            </nav>
+            <a class="btn-quote" asp-controller="Quote" asp-action="Index">
+                Yêu cầu báo giá
+                @if (Cart.Count > 0)
+                {
+                    <span class="cart-badge">@Cart.Count</span>
+                }
+            </a>
+        </div>
+    </header>
+
+    @if (TempData["Toast"] != null)
+    {
+        <div class="container"><div class="toast-msg">✓ @TempData["Toast"]</div></div>
+    }
+
+    <main>
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div>
+                <div class="brand"><span class="brand-logo">🍃</span><span class="brand-name">Nhà Vườn Sơn La</span></div>
+                <p>Nguồn trái cây sỉ từ cao nguyên Sơn La — vùng trồng đạt chuẩn VietGAP/GlobalGAP, giao xe tải &amp; container toàn quốc, hỗ trợ hồ sơ xuất khẩu.</p>
+            </div>
+            <div>
+                <h3>Khám phá</h3>
+                <a asp-controller="Products" asp-action="Index">Sản phẩm</a>
+                <a asp-controller="News" asp-action="Index">Tin tức &amp; giá thị trường</a>
+                <a asp-controller="Home" asp-action="GioiThieu">Về nhà vườn</a>
+            </div>
+            <div>
+                <h3>Đối tác</h3>
+                <a asp-controller="Quote" asp-action="Index">Yêu cầu báo giá</a>
+                <a asp-controller="Home" asp-action="LienHe">Liên hệ hợp tác</a>
+                <a asp-controller="Admin" asp-action="Quotes">Trang quản trị</a>
+            </div>
+            <div>
+                <h3>Liên hệ</h3>
+                <p>📍 Bản Áng, Đông Sang, Mộc Châu, Sơn La</p>
+                <p>☎️ <a href="tel:0888000999">0888 000 999</a></p>
+                <p>✉️ kinhdoanh@@nhavuonsonla.vn</p>
+            </div>
+        </div>
+        <div class="footer-bottom">© @DateTime.Now.Year Nhà Vườn Sơn La. Chuyên cung cấp sỉ nông sản cho đại lý, siêu thị, chợ đầu mối, nhà hàng và xuất khẩu.</div>
+    </footer>
+
+    <div class="floating-contact">
+        <a href="https://zalo.me/0888000999" target="_blank" rel="noopener" class="fc-zalo" title="Chat Zalo">Zalo</a>
+        <a href="tel:0888000999" class="fc-call" title="Gọi hotline">☎</a>
+    </div>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

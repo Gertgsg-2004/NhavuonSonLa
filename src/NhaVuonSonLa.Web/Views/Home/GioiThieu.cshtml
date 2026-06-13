@@ -1,0 +1,42 @@
+@{
+    ViewData["Title"] = "Giới thiệu nhà vườn";
+}
+<section class="hero" style="padding:0">
+    <div class="container text-center" style="padding:56px 16px">
+        <h1 style="margin:0">Về Nhà Vườn Sơn La</h1>
+        <p style="margin:12px auto 0;max-width:640px">Chúng tôi là nhà vườn trực tiếp canh tác — không qua trung gian. Đối tác nhận hàng từ vườn với giá gốc, chứng từ đầy đủ và sản lượng ổn định theo kế hoạch mùa vụ.</p>
+    </div>
+</section>
+
+<div class="container" style="padding:40px 16px;max-width:960px">
+    <div class="card" style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center">
+        <div><div style="font-size:28px;font-weight:700;color:var(--green-dark)">45+ ha</div><div class="muted" style="font-size:14px">Vùng trồng tự chủ</div></div>
+        <div><div style="font-size:28px;font-weight:700;color:var(--green-dark)">3</div><div class="muted" style="font-size:14px">Khu vực canh tác</div></div>
+        <div><div style="font-size:28px;font-weight:700;color:var(--green-dark)">500+ tấn</div><div class="muted" style="font-size:14px">Sản lượng mỗi năm</div></div>
+        <div><div style="font-size:28px;font-weight:700;color:var(--green-dark)">10+ năm</div><div class="muted" style="font-size:14px">Kinh nghiệm bán sỉ</div></div>
+    </div>
+
+    <h2 style="margin-top:40px">Ba khu vùng trồng</h2>
+    <div class="grid grid-3">
+        <div class="card"><span style="font-size:36px">🥭</span><h3 style="margin:8px 0 4px">Nhà vườn Yên Châu</h3><p class="muted" style="font-size:14px;margin:0">Xoài tròn bản địa (chỉ dẫn địa lý) và xoài tượng da xanh, đạt VietGAP, có mã số vùng trồng xuất khẩu.</p></div>
+        <div class="card"><span style="font-size:36px">🍓</span><h3 style="margin:8px 0 4px">Nhà vườn Mộc Châu</h3><p class="muted" style="font-size:14px;margin:0">Cao nguyên 1.050m: mận hậu, dâu tây Hana nhà màng hữu cơ, chanh leo GlobalGAP.</p></div>
+        <div class="card"><span style="font-size:36px">🟤</span><h3 style="margin:8px 0 4px">Nhà vườn Sông Mã</h3><p class="muted" style="font-size:14px;margin:0">Thủ phủ nhãn miền Bắc hơn 7.500ha; nhãn cùi dày hạt nhỏ phục vụ nội địa và xuất khẩu.</p></div>
+    </div>
+
+    <h2 style="margin-top:40px">Chứng nhận chất lượng</h2>
+    <div class="badges" style="gap:10px">
+        <span class="badge badge-cert" style="font-size:14px;padding:8px 16px">✓ VietGAP</span>
+        <span class="badge badge-cert" style="font-size:14px;padding:8px 16px">✓ GlobalGAP</span>
+        <span class="badge badge-cert" style="font-size:14px;padding:8px 16px">✓ Organic (dâu tây)</span>
+        <span class="badge badge-cert" style="font-size:14px;padding:8px 16px">✓ Mã số vùng trồng xuất khẩu</span>
+    </div>
+
+    <div class="cta" style="margin-top:40px">
+        <h2>Trở thành đối tác phân phối</h2>
+        <p>Liên hệ đội kinh doanh để nhận bảng giá sỉ, chính sách công nợ và phương án vận chuyển phù hợp quy mô của bạn.</p>
+        <div class="cta-actions">
+            <a class="btn btn-accent" asp-controller="Quote" asp-action="Index">Yêu cầu báo giá</a>
+            <a class="btn btn-white" asp-controller="Home" asp-action="LienHe">Liên hệ hợp tác</a>
+        </div>
+    </div>
+</div>

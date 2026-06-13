@@ -1,0 +1,23 @@
+@model List<Post>
+@{
+    ViewData["Title"] = "Tin tức — Kỹ thuật trồng, mùa vụ, xuất khẩu, giá thị trường";
+}
+<div class="container" style="padding:32px 16px;max-width:860px">
+    <h1 style="margin:0">Tin tức &amp; giá thị trường</h1>
+    <p class="muted">Bốn chuyên mục: kỹ thuật trồng · mùa vụ · xuất khẩu · giá thị trường.</p>
+
+    <div style="margin-top:24px;display:flex;flex-direction:column;gap:16px">
+        @foreach (var post in Model)
+        {
+            <a class="card" style="display:block" asp-controller="News" asp-action="Detail" asp-route-slug="@post.Slug">
+                <div style="display:flex;gap:12px;align-items:center">
+                    <span class="tag">@post.CategoryLabel</span>
+                    <time class="muted" style="font-size:13px">@post.PublishedAt.ToString("dd/MM/yyyy")</time>
+                </div>
+                <h2 style="font-size:20px;margin:8px 0 6px">@post.Title</h2>
+                <p class="muted" style="margin:0">@post.Excerpt</p>
+            </a>
+        }
+    </div>
+</div>
+<div style="height:40px"></div>

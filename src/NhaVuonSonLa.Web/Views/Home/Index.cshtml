@@ -1,0 +1,124 @@
+@model HomeViewModel
+@{
+    ViewData["Title"] = "Trái cây sỉ tại vườn cho đại lý, siêu thị, xuất khẩu";
+}
+
+<!-- 1. Hero -->
+<section class="hero" style="padding:0">
+    <div class="container hero-inner">
+        <div>
+            <span class="tagline-chip">Chuyên bán sỉ cho đại lý · siêu thị · chợ đầu mối · xuất khẩu</span>
+            <h1>Trái cây sỉ từ cao nguyên Sơn La</h1>
+            <p>Hơn 45ha vùng trồng đạt chuẩn tại Yên Châu, Mộc Châu, Sông Mã. Giá theo mùa vụ và khối lượng — gửi yêu cầu báo giá, phản hồi trong 2 giờ làm việc.</p>
+            <div class="hero-actions">
+                <a class="btn btn-white" asp-controller="Products" asp-action="Index">Xem sản phẩm</a>
+                <a class="btn btn-accent" asp-controller="Quote" asp-action="Index">Yêu cầu báo giá ngay</a>
+            </div>
+        </div>
+        <div class="hero-emojis">
+            <span>🥭</span><span>🍓</span><span>🍑</span><span>🟣</span><span>🍈</span><span>🚛</span>
+        </div>
+    </div>
+</section>
+
+<!-- 2. USP -->
+<div class="container">
+    <div class="usp-strip">
+        <div class="usp"><span class="icon">🌱</span><div><h3>Vùng trồng đạt chuẩn</h3><p>VietGAP · GlobalGAP · Organic, có mã số vùng trồng xuất khẩu</p></div></div>
+        <div class="usp"><span class="icon">💰</span><div><h3>Giá sỉ tận vườn</h3><p>Giá bậc thang theo số lượng 10kg → 1 tấn</p></div></div>
+        <div class="usp"><span class="icon">🚛</span><div><h3>Giao xe tải &amp; container</h3><p>Đội xe riêng giao toàn quốc, đóng hàng chuẩn kiểm dịch</p></div></div>
+        <div class="usp"><span class="icon">📋</span><div><h3>Hỗ trợ xuất khẩu</h3><p>Hồ sơ truy xuất nguồn gốc, chứng nhận, đóng container</p></div></div>
+    </div>
+</div>
+
+<!-- 3. Sản phẩm nổi bật -->
+<section><div class="container">
+    <div class="section-head">
+        <div><h2>Sản phẩm nổi bật</h2><p>Đặc sản chủ lực của nhà vườn, sẵn sàng đơn số lượng lớn</p></div>
+        <a asp-controller="Products" asp-action="Index">Xem tất cả →</a>
+    </div>
+    <div class="grid grid-4">
+        @foreach (var p in Model.Featured)
+        {
+            <partial name="_ProductCard" model="p" />
+        }
+    </div>
+</div></section>
+
+<!-- 4. Hoa quả theo mùa -->
+<section class="bg-green"><div class="container">
+    <div class="section-head">
+        <div><h2>Đang vào mùa — Tháng @Model.CurrentMonth</h2><p>Hàng đang thu hoạch rộ, sản lượng tốt nhất để chốt đơn lớn</p></div>
+        <a asp-controller="Products" asp-action="Index" asp-route-season="true">Xem hàng đang mùa →</a>
+    </div>
+    @if (Model.InSeason.Any())
+    {
+        <div class="grid grid-4">
+            @foreach (var p in Model.InSeason)
+            {
+                <partial name="_ProductCard" model="p" />
+            }
+        </div>
+    }
+    else
+    {
+        <p class="muted">Tháng này đang giáp vụ — xem danh sách sản phẩm để đặt trước vụ tới.</p>
+    }
+</div></section>
+
+<!-- 5. Quy trình thu hoạch -->
+<section><div class="container">
+    <div class="section-head"><div><h2>Quy trình thu hoạch &amp; giao hàng</h2><p>Từ vườn đến xe trong 24 giờ — giữ trọn độ tươi cho đơn sỉ</p></div></div>
+    <div class="steps">
+        <div class="step"><div class="num">01</div><h3>Kiểm tra độ chín</h3><p>Đo độ ngọt từng lô, chỉ hái khi đạt chuẩn</p></div>
+        <div class="step"><div class="num">02</div><h3>Thu hái buổi sớm</h3><p>Hái tay nhẹ nhàng lúc 4–8h sáng giữ độ tươi</p></div>
+        <div class="step"><div class="num">03</div><h3>Phân loại &amp; đóng gói</h3><p>Tuyển size, đóng thùng/sọt theo yêu cầu khách</p></div>
+        <div class="step"><div class="num">04</div><h3>Kiểm định chất lượng</h3><p>Gắn mã lô truy xuất, kèm chứng nhận</p></div>
+        <div class="step"><div class="num">05</div><h3>Lên xe trong ngày</h3><p>Xe tải/container xuất bến đúng hẹn</p></div>
+    </div>
+</div></section>
+
+<!-- 6. Đánh giá -->
+<section class="bg-white"><div class="container">
+    <div class="section-head"><div><h2>Đối tác nói gì về nhà vườn</h2><p>Đại lý, chuỗi cửa hàng, đơn vị xuất khẩu đang hợp tác lâu dài</p></div></div>
+    <div class="grid grid-3">
+        @foreach (var r in Model.Reviews)
+        {
+            <figure class="card" style="margin:0">
+                <div class="stars">@(new string('★', r.Rating))</div>
+                <blockquote style="margin:12px 0 0;color:var(--stone-700)">“@r.Content”</blockquote>
+                <figcaption class="mt-4"><b>@r.AuthorName</b> <span class="muted">— @r.CompanyName</span></figcaption>
+            </figure>
+        }
+    </div>
+</div></section>
+
+<!-- 7. Tin tức -->
+<section><div class="container">
+    <div class="section-head">
+        <div><h2>Tin tức &amp; giá thị trường</h2><p>Kỹ thuật trồng, mùa vụ, xuất khẩu và nhận định giá</p></div>
+        <a asp-controller="News" asp-action="Index">Xem tất cả →</a>
+    </div>
+    <div class="grid grid-3">
+        @foreach (var post in Model.Posts)
+        {
+            <a class="card" style="display:block" asp-controller="News" asp-action="Detail" asp-route-slug="@post.Slug">
+                <span class="tag">@post.CategoryLabel</span>
+                <h3 style="margin:12px 0 6px">@post.Title</h3>
+                <p class="muted" style="font-size:14px;margin:0">@post.Excerpt</p>
+            </a>
+        }
+    </div>
+</div></section>
+
+<!-- 8. CTA -->
+<section><div class="container">
+    <div class="cta">
+        <h2>Cần báo giá cho đơn số lượng lớn?</h2>
+        <p>Gửi danh sách sản phẩm và khối lượng — nhân viên kinh doanh phản hồi báo giá chi tiết trong 2 giờ làm việc, kèm lịch thu hoạch và phương án vận chuyển.</p>
+        <div class="cta-actions">
+            <a class="btn btn-accent" asp-controller="Quote" asp-action="Index">Gửi yêu cầu báo giá</a>
+            <a class="btn btn-white" href="tel:0888000999">☎ 0888 000 999</a>
+        </div>
+    </div>
+</div></section>

@@ -1,41 +1,24 @@
-# Dependencies
-node_modules/
-.pnpm-store/
+# ===== .NET =====
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+[Dd]ebug/
+[Rr]elease/
+.vs/
 
-# Build outputs
-dist/
-.next/
-out/
-build/
+# Cơ sở dữ liệu SQLite (tự tạo khi chạy — không commit)
+*.db
+*.db-shm
+*.db-wal
 
-# Environment
-.env
-.env.local
-.env.*.local
-
-# Prisma
-apps/api/prisma/migrations/dev/
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-pnpm-debug.log*
-
-# IDE / OS
+# ===== IDE / OS =====
 .idea/
 .vscode/
 .DS_Store
-# Visual Studio (tự sinh khi mở folder — không phải file dự án)
-.vs/
+
+# ===== Visual Studio (tự sinh khi mở folder) =====
 *.sqlite
 slnx.sqlite
 *.slnx
-
-# Test
-coverage/
-
-# Misc
-*.tsbuildinfo
-.turbo/
-uploads/

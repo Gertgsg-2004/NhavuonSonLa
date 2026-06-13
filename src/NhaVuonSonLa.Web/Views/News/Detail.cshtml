@@ -1,0 +1,28 @@
+@model Post
+@{
+    ViewData["Title"] = Model.Title;
+    ViewData["Description"] = Model.Excerpt;
+    var others = ViewBag.Others as List<Post> ?? new List<Post>();
+}
+<div class="container" style="padding:32px 16px;max-width:760px">
+    <div class="crumbs"><a asp-controller="Home" asp-action="Index">Trang chủ</a> / <a asp-controller="News" asp-action="Index">Tin tức</a></div>
+    <span class="tag">@Model.CategoryLabel</span>
+    <h1 style="margin:12px 0 6px">@Model.Title</h1>
+    <time class="muted" style="font-size:13px">@Model.PublishedAt.ToString("dd/MM/yyyy")</time>
+    <div class="prose" style="margin-top:20px">
+        <p style="font-weight:600">@Model.Excerpt</p>
+        <p>@Model.Content</p>
+    </div>
+
+    @if (others.Any())
+    {
+        <div style="border-top:1px solid var(--stone-200);margin-top:32px;padding-top:20px">
+            <h2 style="font-size:17px">Bài viết khác</h2>
+            @foreach (var p in others)
+            {
+                <a style="display:block;color:var(--green-dark);padding:4px 0" asp-controller="News" asp-action="Detail" asp-route-slug="@p.Slug">@p.Title</a>
+            }
+        </div>
+    }
+</div>
+<div style="height:40px"></div>

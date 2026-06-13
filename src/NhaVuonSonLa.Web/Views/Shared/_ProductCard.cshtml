@@ -1,0 +1,46 @@
+@model Product
+@{
+    var month = DateTime.Now.Month;
+    var nextMonth = month % 12 + 1;
+    string seasonClass; string seasonLabel;
+    if (Model.IsInSeason(month)) { seasonClass = "badge-season-in"; seasonLabel = "Đang vào mùa"; }
+    else if (Model.IsInSeason(nextMonth)) { seasonClass = "badge-season-up"; seasonLabel = "Sắp vào vụ"; }
+    else { seasonClass = "badge-season-off"; seasonLabel = "Hết mùa — đặt trước"; }
+    var startPrice = PricingService.StartingPrice(Model);
+}
+<div class="product-card">
+    <a class="product-media" style="background:@Model.Gradient" asp-controller="Products" asp-action="Detail" asp-route-slug="@Model.Slug">
+        <span>@Model.Emoji</span>
+        <span class="badge @seasonClass badge-pos left">@seasonLabel</span>
+        @if (Model.IsExportQuality)
+        {
+            <span class="badge badge-export badge-pos right">Xuất khẩu</span>
+        }
+    </a>
+    <div class="product-body">
+        <div class="product-region">@Model.GrowingRegion · @Model.HarvestPeriod</div>
+        <a class="product-name" asp-controller="Products" asp-action="Detail" asp-route-slug="@Model.Slug">@Model.Name</a>
+        <div class="badges">
+            @foreach (var cert in Model.CertificationList)
+            {
+                <span class="badge badge-cert">✓ @cert</span>
+            }
+        </div>
+        <div class="product-price">
+            @if (Model.PriceOnRequest)
+            {
+                <div class="price-request">Liên hệ báo giá</div>
+            }
+            else
+            {
+                <div class="price-from">từ @Format.Vnd(startPrice!.Value)<small>/@Model.Unit</small></div>
+                <div class="price-hint">Giá sỉ theo số lượng</div>
+            }
+        </div>
+        <form class="mt-2" asp-controller="Quote" asp-action="Add" method="post">
+            <input type="hidden" name="productId" value="@Model.Id" />
+            <input type="hidden" name="quantity" value="@Model.MinOrderQuantity" />
+            <button type="submit" class="btn btn-accent btn-block">+ Thêm vào báo giá</button>
+        </form>
+    </div>
+</div>

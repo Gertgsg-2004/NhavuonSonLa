@@ -1,0 +1,162 @@
+@model Product
+@{
+    ViewData["Title"] = Model.Name;
+    ViewData["Description"] = Model.ShortDescription;
+    var month = DateTime.Now.Month;
+    var related = ViewBag.Related as List<Product> ?? new List<Product>();
+    var tiers = Model.PriceTiers.OrderBy(t => t.MinQuantity).ToList();
+}
+
+<div class="container" style="padding-top:28px">
+    <div class="crumbs">
+        <a asp-controller="Home" asp-action="Index">Trang chủ</a> /
+        <a asp-controller="Products" asp-action="Index">Sản phẩm</a> /
+        <a asp-controller="Products" asp-action="Index" asp-route-category="@Model.Category?.Slug">@Model.Category?.Name</a> /
+        <span>@Model.Name</span>
+    </div>
+
+    <div class="detail-grid">
+        <div>
+            <div class="detail-media" style="background:@Model.Gradient">@Model.Emoji</div>
+            <p class="muted" style="font-size:13px;margin-top:8px">Ảnh/video thật của sản phẩm sẽ do quản trị viên tải lên (giai đoạn sau).</p>
+        </div>
+
+        <div>
+            <div class="badges">
+                @if (Model.IsInSeason(month))
+                {
+                    <span class="badge badge-season-in">Đang vào mùa</span>
+                }
+                else
+                {
+                    <span class="badge badge-season-off">Hết mùa — đặt trước</span>
+                }
+                @if (Model.IsExportQuality)
+                {
+                    <span class="badge badge-export">🚢 Đạt chuẩn xuất khẩu</span>
+                }
+                @foreach (var c in Model.CertificationList)
+                {
+                    <span class="badge badge-cert">✓ @c</span>
+                }
+            </div>
+
+            <h1 style="margin:12px 0 6px">@Model.Name</h1>
+            <p class="muted">@Model.ShortDescription</p>
+
+            <dl class="spec-box">
+                <div><dt>Vùng trồng</dt><dd>@Model.GrowingRegion</dd></div>
+                <div><dt>Thời gian thu hoạch</dt><dd>@Model.HarvestPeriod</dd></div>
+                <div><dt>Nguồn gốc giống</dt><dd>@Model.Origin</dd></div>
+                <div><dt>Đặt tối thiểu</dt><dd>@Model.MinOrderQuantity@Model.Unit</dd></div>
+            </dl>
+
+            @if (Model.PriceOnRequest)
+            {
+                <div class="price-panel request">
+                    <strong style="color:var(--orange-dark)">Giá theo thỏa thuận</strong>
+                    <p class="muted" style="font-size:14px">Sản phẩm này báo giá theo thời điểm và khối lượng. Gửi yêu cầu để nhận báo giá trong 2 giờ làm việc.</p>
+                    <form asp-controller="Quote" asp-action="Add" method="post">
+                        <input type="hidden" name="productId" value="@Model.Id" />
+                        <input type="hidden" name="quantity" value="@Model.MinOrderQuantity" />
+                        <button type="submit" class="btn btn-accent btn-block">+ Thêm vào yêu cầu báo giá</button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="price-panel" id="pricePanel" data-min="@Model.MinOrderQuantity"
+                     data-tiers='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(tiers.Select(t => new { min = t.MinQuantity, price = t.Price })))'>
+                    <h2 style="font-size:17px;margin:0 0 4px">Bảng giá theo số lượng</h2>
+                    <table class="tier-table">
+                        <thead><tr><th>Khối lượng</th><th style="text-align:right">Đơn giá/@Model.Unit</th></tr></thead>
+                        <tbody>
+                            @foreach (var t in tiers)
+                            {
+                                <tr data-min="@t.MinQuantity"><td>@t.Label</td><td style="text-align:right">@Format.Vnd(t.Price)</td></tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+                        <label for="qty">Khối lượng (@Model.Unit):</label>
+                        <input type="number" id="qty" class="field" style="width:120px;margin:0" min="@Model.MinOrderQuantity" step="10" value="@Model.MinOrderQuantity" />
+                    </div>
+                    <div class="estimate" id="estimate"></div>
+
+                    <form asp-controller="Quote" asp-action="Add" method="post" style="margin-top:14px">
+                        <input type="hidden" name="productId" value="@Model.Id" />
+                        <input type="hidden" name="quantity" id="qtyHidden" value="@Model.MinOrderQuantity" />
+                        <button type="submit" class="btn btn-accent btn-block">+ Thêm vào yêu cầu báo giá</button>
+                    </form>
+                    <p class="text-center muted" style="font-size:12px;margin-top:8px">Gửi yêu cầu → nhân viên xác nhận tồn kho &amp; lịch giao → chốt đơn. Không cần thanh toán trước.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <section style="padding:40px 0 0">
+        <h2 style="font-size:20px">Mô tả sản phẩm</h2>
+        <div class="prose" style="max-width:760px">
+            @foreach (var para in Model.Description.Split("\n\n", StringSplitOptions.RemoveEmptyEntries))
+            {
+                <p>@para</p>
+            }
+        </div>
+        <div class="card" style="background:var(--green-50);border-color:#bbf7d0;max-width:760px;margin-top:8px">
+            <strong style="color:var(--green-dark)">Truy xuất nguồn gốc:</strong> mỗi đơn hàng được gắn mã lô thu hoạch (ngày hái, vườn, chứng nhận) — quét QR trên thùng hàng để xem thông tin lô.
+        </div>
+    </section>
+
+    @if (related.Any())
+    {
+        <section style="padding:40px 0">
+            <div class="section-head"><div><h2>Sản phẩm cùng nhà vườn</h2></div></div>
+            <div class="grid grid-4">
+                @foreach (var p in related)
+                {
+                    <partial name="_ProductCard" model="p" />
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@if (!Model.PriceOnRequest)
+{
+    <script>
+        (function () {
+            var panel = document.getElementById('pricePanel');
+            var tiers = JSON.parse(panel.dataset.tiers);
+            var min = parseFloat(panel.dataset.min);
+            var qty = document.getElementById('qty');
+            var qtyHidden = document.getElementById('qtyHidden');
+            var estimate = document.getElementById('estimate');
+
+            function fmt(n) { return new Intl.NumberFormat('vi-VN').format(n) + 'đ'; }
+            function fmtQty(n) { return n >= 1000 ? (n / 1000) + ' tấn' : n + 'kg'; }
+
+            function resolve(q) {
+                var match = null;
+                tiers.forEach(function (t) { if (t.min <= q) { if (!match || t.min > match.min) match = t; } });
+                return match ? match.price : null;
+            }
+
+            function update() {
+                var q = parseFloat(qty.value) || 0;
+                qtyHidden.value = q;
+                document.querySelectorAll('.tier-table tbody tr').forEach(function (tr) {
+                    tr.classList.toggle('active', resolve(q) !== null && parseFloat(tr.dataset.min) === activeMin(q));
+                });
+                if (q < min) { estimate.innerHTML = '<span style="color:#dc2626">Khối lượng đặt tối thiểu: ' + fmtQty(min) + '</span>'; return; }
+                var price = resolve(q);
+                if (price) estimate.innerHTML = 'Tạm tính: <b>' + fmt(price * q) + '</b> <span class="muted">(' + fmtQty(q) + ' × ' + fmt(price) + ')</span>';
+            }
+            function activeMin(q) {
+                var m = null; tiers.forEach(function (t) { if (t.min <= q && (m === null || t.min > m)) m = t.min; }); return m;
+            }
+            qty.addEventListener('input', update);
+            update();
+        })();
+    </script>
+}

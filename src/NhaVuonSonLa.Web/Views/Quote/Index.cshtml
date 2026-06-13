@@ -1,0 +1,70 @@
+@model List<NhaVuonSonLa.Web.Services.QuoteCartItem>
+@{
+    ViewData["Title"] = "Giỏ báo giá";
+}
+
+<div class="container" style="padding-top:32px">
+    <h1 style="margin:0">Giỏ báo giá</h1>
+    <p class="muted" style="max-width:680px">Khác với mua lẻ: bạn gửi danh sách sản phẩm + khối lượng, nhà vườn sẽ <b>báo giá theo mùa vụ và số lượng</b>, xác nhận tồn kho và lịch giao trước khi chốt đơn. Không cần thanh toán trước.</p>
+
+    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+    {
+        <div class="form-error">@error.ErrorMessage</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="empty-box" style="margin-top:24px">
+            <div style="font-size:40px">🧺</div>
+            <p>Giỏ báo giá đang trống.</p>
+            <a class="btn btn-primary" asp-controller="Products" asp-action="Index">Chọn sản phẩm →</a>
+        </div>
+    }
+    else
+    {
+        <div class="quote-layout" style="margin-top:24px">
+            <div>
+                @foreach (var item in Model)
+                {
+                    <div class="cart-item">
+                        <div class="cart-thumb" style="background:@item.Gradient">@item.Emoji</div>
+                        <div style="flex:1">
+                            <div style="display:flex;justify-content:space-between;gap:8px">
+                                <a class="product-name" asp-controller="Products" asp-action="Detail" asp-route-slug="@item.Slug">@item.Name</a>
+                                <form asp-controller="Quote" asp-action="Remove" method="post">
+                                    <input type="hidden" name="productId" value="@item.ProductId" />
+                                    <button type="submit" class="muted" style="background:none;border:none;cursor:pointer" title="Xóa">✕</button>
+                                </form>
+                            </div>
+                            <form asp-controller="Quote" asp-action="Update" method="post" style="display:flex;align-items:center;gap:8px;margin-top:8px">
+                                <input type="hidden" name="productId" value="@item.ProductId" />
+                                <label>Khối lượng:</label>
+                                <input type="number" name="quantity" class="field" style="width:110px;margin:0" min="@item.MinOrderQuantity" step="10" value="@item.Quantity" />
+                                <span class="muted" style="font-size:13px">@item.Unit</span>
+                                <button type="submit" class="btn btn-primary" style="padding:8px 14px;font-size:13px">Cập nhật</button>
+                            </form>
+                            <span class="muted" style="font-size:12px">= @Format.Quantity(item.Quantity) · tối thiểu @item.MinOrderQuantity@item.Unit</span>
+                        </div>
+                    </div>
+                }
+                <a class="filter-link" style="display:inline;color:var(--green-dark);font-weight:600" asp-controller="Products" asp-action="Index">+ Thêm sản phẩm khác</a>
+            </div>
+
+            <form class="cart-form" asp-controller="Quote" asp-action="Submit" method="post">
+                <h2 style="font-size:18px;margin:0 0 12px">Thông tin nhận báo giá</h2>
+                <input class="field" name="FullName" placeholder="Họ và tên *" required />
+                <input class="field" name="CompanyName" placeholder="Công ty / cửa hàng" />
+                <input class="field" name="Phone" placeholder="Số điện thoại *" required />
+                <input class="field" name="Email" type="email" placeholder="Email" />
+                <div style="display:flex;gap:8px">
+                    <input class="field" name="DeliveryDate" type="date" title="Ngày giao mong muốn" />
+                    <input class="field" name="DeliveryAddress" placeholder="Nơi giao (tỉnh/chợ)" />
+                </div>
+                <textarea class="field" name="Note" rows="3" placeholder="Ghi chú chung (thanh toán, chứng từ...)"></textarea>
+                <button type="submit" class="btn btn-accent btn-block">Gửi yêu cầu báo giá (@Model.Count sản phẩm)</button>
+                <p class="text-center muted" style="font-size:12px;margin-top:10px">Phản hồi trong 2 giờ làm việc · Hotline 0888 000 999</p>
+            </form>
+        </div>
+    }
+</div>
+<div style="height:40px"></div>

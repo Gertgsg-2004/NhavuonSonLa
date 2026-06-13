@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Liên hệ";
+}
+<div class="container" style="padding:32px 16px">
+    <h1 style="margin:0">Liên hệ</h1>
+    <p class="muted">Đội kinh doanh trực từ 7h00 – 21h00 hằng ngày (kể cả cuối tuần trong mùa vụ).</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:24px">
+        <div style="display:flex;flex-direction:column;gap:14px">
+            <a class="card" href="tel:0888000999" style="display:flex;gap:16px;align-items:center">
+                <span style="font-size:28px">☎️</span>
+                <div><div class="muted" style="font-size:13px">Hotline / Zalo</div><div style="font-size:18px;font-weight:700;color:var(--green-dark)">0888 000 999</div></div>
+            </a>
+            <a class="card" href="mailto:kinhdoanh@nhavuonsonla.vn" style="display:flex;gap:16px;align-items:center">
+                <span style="font-size:28px">✉️</span>
+                <div><div class="muted" style="font-size:13px">Email kinh doanh</div><div style="font-weight:600">kinhdoanh@@nhavuonsonla.vn</div></div>
+            </a>
+            <div class="card" style="display:flex;gap:16px;align-items:center">
+                <span style="font-size:28px">📍</span>
+                <div><div class="muted" style="font-size:13px">Địa chỉ nhà vườn</div><div style="font-weight:600">Bản Áng, Đông Sang, Mộc Châu, Sơn La</div></div>
+            </div>
+            <div style="display:flex;gap:12px">
+                <a class="btn btn-block" style="background:#0ea5e9;color:#fff;flex:1" href="https://zalo.me/0888000999" target="_blank" rel="noopener">💬 Chat Zalo</a>
+                <a class="btn btn-block" style="background:#1d4ed8;color:#fff;flex:1" href="https://facebook.com/nhavuonsonla" target="_blank" rel="noopener">📘 Facebook</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size:18px;margin:0 0 4px">Gửi lời nhắn</h2>
+            <p class="muted" style="font-size:14px;margin:0 0 12px">Cần báo giá nhanh? Dùng <a style="color:var(--green-dark)" asp-controller="Quote" asp-action="Index">giỏ báo giá</a> để được phản hồi sớm nhất.</p>
+            <input class="field" placeholder="Họ và tên *" />
+            <input class="field" placeholder="Công ty" />
+            <input class="field" placeholder="Số điện thoại *" />
+            <textarea class="field" rows="5" placeholder="Nội dung *"></textarea>
+            <button class="btn btn-primary btn-block" type="button">Gửi lời nhắn</button>
+            <p class="muted text-center" style="font-size:12px;margin-top:8px">(Form demo — kết nối gửi mail ở giai đoạn sau)</p>
+        </div>
+    </div>
+</div>
+<div style="height:40px"></div>

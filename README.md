@@ -1,91 +1,80 @@
-# 🍊 Nhà Vườn Sơn La — Website bán sỉ nông sản B2B
+# 🍊 Nhà Vườn Sơn La — Website bán sỉ nông sản (B2B)
 
-Nền tảng thương mại **B2B (bán buôn/bán sỉ)** cho nhà vườn tại Sơn La. Khác với website bán lẻ thông thường, hệ thống xoay quanh **yêu cầu báo giá → báo giá → chốt đơn → thu hoạch → giao hàng xe tải/container**, với giá thay đổi theo **mùa vụ** và **bậc số lượng**, hỗ trợ **công nợ** và **đặt cọc trước mùa vụ**.
+Website thương mại **B2B (bán buôn/bán sỉ)** cho nhà vườn Sơn La, viết bằng **ASP.NET Core MVC (.NET 8) + Entity Framework Core + SQLite**.
 
-## Đối tượng khách hàng
+Khác với web bán lẻ thông thường, hệ thống xoay quanh **yêu cầu báo giá** (thay cho "mua ngay"), **giá theo bậc số lượng** (10kg → 1 tấn), **ẩn giá với khách lẻ**, và phục vụ đại lý/siêu thị/chợ đầu mối/thương lái/nhà hàng/công ty xuất khẩu.
 
-Đại lý · Cửa hàng trái cây · Siêu thị · Thương lái · Chợ đầu mối · Nhà hàng · Công ty xuất khẩu
+---
 
-## Đặc thù nghiệp vụ (khác bán lẻ)
+## ▶️ Cách chạy (rất đơn giản)
 
-| Đặc thù | Cách hệ thống xử lý |
-|---|---|
-| Giá thay đổi theo mùa | Bảng `fruit_seasons` + giá cập nhật theo mùa vụ |
-| Giá theo số lượng (10kg → 1 tấn) | Bảng `product_price_tiers` — giá bậc thang tự động |
-| Ẩn giá với khách lẻ | Cờ `isPriceVisible` — khách vãng lai thấy "Liên hệ báo giá" |
-| Báo giá riêng | Luồng Quote: khách gửi yêu cầu → nhân viên báo giá (PDF) |
-| Đặt trước / đặt cọc mùa vụ | Đơn hàng `PRE_ORDER` gắn mùa vụ + thanh toán `DEPOSIT` |
-| Thanh toán sau (công nợ) | `creditLimit`, `currentDebt`, `paymentTermDays` theo khách |
-| Giao xe tải/container | `shipments`: biển số, tài xế, km, chi phí, trạng thái |
-| Truy xuất nguồn gốc | Lô thu hoạch `harvest_batches` gắn vào từng dòng đơn |
+Dự án này chạy thẳng trong **Visual Studio** — không cần cài Docker, không cần cài database riêng (dùng SQLite dạng file, tự tạo khi chạy).
 
-## Tài liệu thiết kế
+### Cách 1 — Visual Studio (khuyên dùng)
+1. Mở file **`NhaVuonSonLa.sln`** bằng Visual Studio 2022.
+2. Nếu báo thiếu **.NET 8**, bấm nút **Install** mà Visual Studio gợi ý (hoặc tải tại https://dotnet.microsoft.com/download/dotnet/8.0).
+3. Bấm nút **▶ chạy** (màu xanh, hoặc phím **F5**).
+4. Trình duyệt tự mở website. Xong!
 
-| Tài liệu | Nội dung |
-|---|---|
-| [01 — Phân tích yêu cầu](docs/01-phan-tich-yeu-cau.md) | Mục tiêu, đối tượng, user story, phạm vi |
-| [02 — Kiến trúc hệ thống](docs/02-kien-truc-he-thong.md) | Sơ đồ kiến trúc, tech stack, monorepo |
-| [03 — Thiết kế CSDL](docs/03-thiet-ke-co-so-du-lieu.md) | ERD, mô tả bảng, quyết định thiết kế |
-| [04 — Thiết kế API](docs/04-thiet-ke-api.md) | Chuẩn REST, danh sách endpoint, ví dụ |
-| [05 — Thiết kế giao diện](docs/05-thiet-ke-giao-dien.md) | Sitemap, wireframe, design system |
-| [06 — Bảo mật & phân quyền](docs/06-bao-mat-phan-quyen.md) | RBAC, JWT, 2FA, rate limit, backup |
-| [07 — Triển khai & vận hành](docs/07-trien-khai-van-hanh.md) | Docker, Nginx, CI/CD, monitoring |
-| [08 — Lộ trình phát triển](docs/08-lo-trinh-phat-trien.md) | Các giai đoạn MVP → mở rộng |
-
-## Cấu trúc dự án
-
-```
-NhavuonSonLa/
-├── docs/                  # Tài liệu thiết kế (08 tài liệu)
-├── apps/
-│   ├── api/               # Backend NestJS + Prisma (PostgreSQL)
-│   │   ├── prisma/        #   schema.prisma (toàn bộ CSDL) + seed
-│   │   └── src/           #   auth, products, quotes, orders, dashboard...
-│   └── web/               # Frontend Next.js (App Router) + Tailwind CSS
-│       └── src/
-│           ├── app/       #   Trang chủ, sản phẩm, báo giá, tin tức...
-│           ├── components/
-│           └── lib/       #   API client, giỏ báo giá, dữ liệu mẫu
-├── docker-compose.yml     # PostgreSQL + Redis + MinIO (dev)
-└── .env.example
-```
-
-## Khởi chạy nhanh (dev)
-
+### Cách 2 — Dòng lệnh
 ```bash
-# 1. Hạ tầng: PostgreSQL + Redis + MinIO
-docker compose up -d
+cd src/NhaVuonSonLa.Web
+dotnet run
+```
+Rồi mở trình duyệt vào địa chỉ hiện trên màn hình (ví dụ `http://localhost:5025`).
 
-# 2. Cài đặt
-pnpm install
-cp .env.example .env          # sửa biến môi trường nếu cần
-cp .env.example apps/api/.env
+> Lần đầu chạy, file `nhavuonsonla.db` (SQLite) được tạo tự động và nạp sẵn dữ liệu mẫu: 7 sản phẩm đặc sản Sơn La, danh mục, giá bậc, tin tức, đánh giá. Muốn nạp lại từ đầu: xóa file `nhavuonsonla.db` rồi chạy lại.
 
-# 3. Khởi tạo CSDL + dữ liệu mẫu
-pnpm prisma:generate
-pnpm prisma:migrate           # prisma migrate dev
-pnpm prisma:seed
+---
 
-# 4. Chạy ứng dụng
-pnpm dev:api                  # API:  http://localhost:3001  (Swagger: /docs)
-pnpm dev:web                  # Web:  http://localhost:3000
+## 🧭 Các trang chính
 
-# (Tùy chọn) Smoke test 43 bước toàn luồng nghiệp vụ trên CSDL vừa seed:
-node apps/api/test/smoke.e2e.mjs
+| Đường dẫn | Nội dung |
+|---|---|
+| `/` | Trang chủ: hero, USP, sản phẩm nổi bật, hàng đang mùa, quy trình thu hoạch, đánh giá, tin tức |
+| `/san-pham` | Danh sách sản phẩm + bộ lọc (mùa vụ, danh mục, vùng trồng, tiêu chuẩn, xuất khẩu) |
+| `/san-pham/{slug}` | Chi tiết sản phẩm: **bảng giá theo số lượng** + chọn khối lượng + tạm tính + thêm vào báo giá |
+| `/bao-gia` | **Giỏ báo giá** → form gửi yêu cầu (thay cho giỏ hàng "mua ngay") |
+| `/tin-tuc`, `/tin-tuc/{slug}` | Tin tức (kỹ thuật trồng, mùa vụ, xuất khẩu, giá thị trường) |
+| `/gioi-thieu`, `/lien-he` | Giới thiệu nhà vườn, liên hệ |
+| `/quan-tri/bao-gia` | Trang quản trị: xem các yêu cầu báo giá khách gửi |
+
+---
+
+## 🗂️ Cấu trúc dự án
+
+```
+NhaVuonSonLa.sln              ← mở file này bằng Visual Studio
+src/NhaVuonSonLa.Web/
+├── Program.cs                ← khởi động: cấu hình EF Core SQLite, Session, nạp dữ liệu mẫu
+├── appsettings.json          ← chuỗi kết nối SQLite
+├── Models/                   ← các lớp dữ liệu: Product, PriceTier, Quote, Category...
+├── Data/
+│   ├── AppDbContext.cs       ← ngữ cảnh CSDL (EF Core)
+│   └── DbSeeder.cs           ← dữ liệu mẫu đặc sản Sơn La
+├── Services/
+│   ├── PricingService.cs     ← tính giá theo bậc số lượng (logic B2B cốt lõi)
+│   └── QuoteCart.cs          ← giỏ báo giá lưu trong Session
+├── Controllers/              ← Home, Products, Quote, News, Admin
+├── Views/                    ← giao diện Razor (.cshtml)
+└── wwwroot/css/site.css      ← giao diện (chủ đề xanh nông nghiệp)
+
+docs/                         ← tài liệu thiết kế (phân tích yêu cầu, CSDL, API, UI, lộ trình)
 ```
 
-> Frontend tự fallback về dữ liệu mẫu (`apps/web/src/lib/mock-data.ts`) khi API chưa chạy — có thể xem demo giao diện chỉ với `pnpm dev:web`.
+---
 
-Tài khoản mẫu sau khi seed:
+## 🌾 Đặc thù nghiệp vụ B2B đã có
 
-| Vai trò | Email | Mật khẩu |
-|---|---|---|
-| Admin | `admin@nhavuonsonla.vn` | `Admin@123` |
-| Nhân viên | `nhanvien@nhavuonsonla.vn` | `Staff@123` |
-| Đại lý | `daily@example.com` | `Dealer@123` |
+| Đặc thù | Cách xử lý |
+|---|---|
+| Giá theo bậc số lượng | `PriceTier` + `PricingService` — chọn khối lượng tự ra đơn giá tương ứng |
+| Ẩn giá với khách lẻ | `Product.IsPriceVisible = false` → hiện "Liên hệ báo giá" / "Giá theo thỏa thuận" |
+| Yêu cầu báo giá | Giỏ báo giá (Session) → gửi 1 yêu cầu, lưu DB, sinh mã `BG-2026-00001` |
+| Mùa vụ | `Product` có tháng bắt đầu/kết thúc/rộ vụ; badge "Đang vào mùa / Sắp vào vụ / Hết mùa" |
+| Tiêu chuẩn & xuất khẩu | VietGAP/GlobalGAP/Organic + cờ "đạt chuẩn xuất khẩu", lọc được |
 
-## Công nghệ
+## 🔜 Hướng phát triển tiếp (giai đoạn sau)
+Đăng nhập đại lý + giá riêng theo khách · định giá từng dòng báo giá + xuất PDF · chuyển báo giá thành đơn hàng + máy trạng thái · quản lý kho/lô hàng · báo cáo doanh thu. Phân tích thiết kế đầy đủ nằm trong thư mục [`docs/`](docs/).
 
-**Frontend**: Next.js 15 · React 19 · TypeScript · Tailwind CSS — **Backend**: NestJS 11 · Prisma · PostgreSQL 16 · Redis — **Hạ tầng**: Docker · Nginx · GitHub Actions · MinIO/S3 · Cloudinary
-
-> Lưu ý: sản phẩm mẫu trong seed dùng đặc sản thật của Sơn La (xoài Yên Châu, nhãn Sông Mã, mận hậu Mộc Châu, dâu tây, chanh leo, na Mai Sơn…) — quản trị viên có thể thêm danh mục bất kỳ (bưởi, cam, sầu riêng…) trong trang quản trị.
+> Ghi chú: bản thiết kế chi tiết trong `docs/` mô tả kiến trúc đầy đủ (gồm cả phương án Node.js/NestJS ban đầu). Bản chạy thực tế trong repo này là **.NET**, hiện thực phần lõi: catalog + giá bậc + báo giá. Bản mã nguồn Node.js cũ vẫn lưu trong lịch sử git nếu cần tham khảo.
