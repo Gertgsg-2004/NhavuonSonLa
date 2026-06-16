@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using NhaVuonSonLa.Web.Data;
 using NhaVuonSonLa.Web.Services;
@@ -6,6 +7,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 // MVC (Controllers + Razor Views)
 builder.Services.AddControllersWithViews();
+
+// Đăng nhập bằng cookie — bảo vệ khu vực quản trị /quan-tri
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(o =>
+    {
+        o.LoginPath = "/dang-nhap";
+        o.AccessDeniedPath = "/dang-nhap";
+        o.ExpireTimeSpan = TimeSpan.FromHours(8);
+    });
 
 // Cơ sở dữ liệu SQLite — file tự tạo, KHÔNG cần cài server database
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -39,6 +49,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

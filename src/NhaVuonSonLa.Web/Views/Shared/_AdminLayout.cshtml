@@ -1,0 +1,57 @@
+@{
+    var path = Context.Request.Path.Value ?? "";
+    string Active(string seg) => path.Contains(seg) ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] | Quản trị Nhà Vườn Sơn La</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<div class="admin-shell">
+    <aside class="admin-sidebar">
+        <a class="admin-brand" href="/quan-tri">
+            <span class="brand-logo">🍃</span>
+            <span>Quản trị</span>
+        </a>
+        <nav class="admin-nav">
+            <a href="/quan-tri" class="@(path.TrimEnd('/').EndsWith("quan-tri") ? "active" : "")">📊 Tổng quan</a>
+            <a href="/quan-tri/san-pham" class="@Active("/san-pham")">🥭 Sản phẩm</a>
+            <a href="/quan-tri/danh-muc" class="@Active("/danh-muc")">🗂️ Danh mục</a>
+            <a href="/quan-tri/bao-gia" class="@Active("/bao-gia")">📋 Báo giá</a>
+        </nav>
+        <div class="admin-sidebar-foot">
+            <a href="/" target="_blank">↗ Xem website</a>
+            <form method="post" action="/dang-xuat">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="admin-logout">⎋ Đăng xuất</button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <div>
+                <strong>@ViewData["Title"]</strong>
+            </div>
+            <div class="admin-user">
+                👤 @User.Identity?.Name <span class="muted">(@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value)</span>
+            </div>
+        </header>
+
+        @if (TempData["AdminToast"] != null)
+        {
+            <div class="toast-msg" style="margin:16px 24px 0">✓ @TempData["AdminToast"]</div>
+        }
+
+        <div class="admin-content">
+            @RenderBody()
+        </div>
+    </div>
+</div>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

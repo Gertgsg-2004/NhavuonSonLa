@@ -18,11 +18,13 @@ public class AppDbContext : DbContext
     public DbSet<QuoteItem> QuoteItems => Set<QuoteItem>();
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<Post> Posts => Set<Post>();
+    public DbSet<AppUser> Users => Set<AppUser>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<Category>().HasIndex(c => c.Slug).IsUnique();
         b.Entity<Product>().HasIndex(p => p.Slug).IsUnique();
+        b.Entity<AppUser>().HasIndex(u => u.Email).IsUnique();
 
         // SQLite không có kiểu decimal gốc — khai báo độ chính xác cho tiền/khối lượng
         foreach (var prop in b.Model.GetEntityTypes()

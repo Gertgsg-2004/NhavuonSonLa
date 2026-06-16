@@ -37,7 +37,28 @@ Rồi mở trình duyệt vào địa chỉ hiện trên màn hình (ví dụ `h
 | `/bao-gia` | **Giỏ báo giá** → form gửi yêu cầu (thay cho giỏ hàng "mua ngay") |
 | `/tin-tuc`, `/tin-tuc/{slug}` | Tin tức (kỹ thuật trồng, mùa vụ, xuất khẩu, giá thị trường) |
 | `/gioi-thieu`, `/lien-he` | Giới thiệu nhà vườn, liên hệ |
-| `/quan-tri/bao-gia` | Trang quản trị: xem các yêu cầu báo giá khách gửi |
+
+---
+
+## 🔐 Trang quản trị (Admin)
+
+Vào địa chỉ **`/quan-tri`** (hoặc bấm "Trang quản trị" ở chân trang). Cần đăng nhập:
+
+| | |
+|---|---|
+| **Email** | `admin@nhavuonsonla.vn` |
+| **Mật khẩu** | `Admin@123` |
+
+Sau khi đăng nhập, khu vực quản trị gồm:
+
+| Trang | Chức năng |
+|---|---|
+| **Tổng quan** (`/quan-tri`) | Thẻ số liệu: số sản phẩm, danh mục, đang vào mùa, yêu cầu báo giá chờ xử lý + biểu đồ sản phẩm được hỏi nhiều + báo giá gần đây |
+| **Sản phẩm** (`/quan-tri/san-pham`) | **Thêm / sửa / xóa / ẩn / hiện** sản phẩm — đầy đủ: giá bậc số lượng, mùa vụ, tiêu chuẩn, ẩn giá khách lẻ, nổi bật, xuất khẩu |
+| **Danh mục** (`/quan-tri/danh-muc`) | Thêm / sửa / xóa danh mục |
+| **Báo giá** (`/quan-tri/bao-gia`) | Danh sách + chi tiết yêu cầu báo giá, **cập nhật trạng thái** (Pending → Processing → Quoted → Accepted → Converted) |
+
+> Mật khẩu được mã hóa (SHA-256). Đổi mật khẩu admin: sửa trong `Data/DbSeeder.cs` rồi xóa file `nhavuonsonla.db` để tạo lại.
 
 ---
 

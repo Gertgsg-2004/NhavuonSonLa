@@ -231,3 +231,65 @@ label { font-size: 14px; font-weight: 500; color: var(--stone-700); }
   .footer-grid { grid-template-columns: 1fr; }
   .hero h1 { font-size: 32px; }
 }
+
+/* ============ KHU VỰC QUẢN TRỊ ============ */
+.admin-shell { display: flex; min-height: 100vh; background: #f1f5f1; }
+.admin-sidebar { width: 230px; background: var(--stone-900); color: #d6d3d1; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+.admin-brand { display: flex; align-items: center; gap: 8px; padding: 18px 18px; font-weight: 700; color: #fff; font-size: 18px; border-bottom: 1px solid #292524; }
+.admin-nav { display: flex; flex-direction: column; padding: 12px 10px; gap: 2px; flex: 1; }
+.admin-nav a { padding: 11px 14px; border-radius: 9px; color: #d6d3d1; font-size: 14px; font-weight: 500; }
+.admin-nav a:hover { background: #292524; color: #fff; }
+.admin-nav a.active { background: var(--green); color: #fff; }
+.admin-sidebar-foot { padding: 12px 10px; border-top: 1px solid #292524; display: flex; flex-direction: column; gap: 4px; }
+.admin-sidebar-foot a { padding: 9px 14px; font-size: 13px; color: #a8a29e; border-radius: 8px; }
+.admin-sidebar-foot a:hover { background: #292524; color: #fff; }
+.admin-logout { width: 100%; text-align: left; padding: 9px 14px; font-size: 13px; background: none; border: none; color: #fca5a5; cursor: pointer; border-radius: 8px; font-family: inherit; }
+.admin-logout:hover { background: #292524; }
+.admin-main { flex: 1; min-width: 0; }
+.admin-topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: #fff; border-bottom: 1px solid var(--stone-200); position: sticky; top: 0; z-index: 10; }
+.admin-topbar strong { font-size: 18px; }
+.admin-user { font-size: 14px; color: var(--stone-700); }
+.admin-content { padding: 24px; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.stat-card { background: #fff; border: 1px solid var(--stone-200); border-radius: 14px; padding: 18px; }
+.stat-card.accent { background: linear-gradient(135deg, #15803d, #16a34a); color: #fff; border: none; }
+.stat-num { font-size: 30px; font-weight: 700; line-height: 1; }
+.stat-label { margin-top: 6px; font-size: 14px; opacity: .85; }
+.stat-sub { font-size: 12px; opacity: .7; margin-top: 2px; }
+
+.admin-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.admin-panel { background: #fff; border: 1px solid var(--stone-200); border-radius: 14px; padding: 18px; }
+.admin-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.admin-panel-head h2 { font-size: 17px; margin: 0; }
+.admin-panel-head a { font-size: 14px; color: var(--green-dark); font-weight: 600; }
+
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+.bar-label { width: 150px; flex-shrink: 0; }
+.bar-track { flex: 1; background: var(--stone-100); border-radius: 6px; height: 18px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--green); }
+.bar-val { width: 28px; text-align: right; font-weight: 600; }
+
+.filter-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.pill { padding: 6px 12px; border-radius: 999px; font-size: 13px; background: var(--stone-100); color: var(--stone-700); }
+.pill.active { background: var(--green); color: #fff; }
+
+.link-action { display: inline-block; padding: 3px 8px; font-size: 13px; color: var(--green-dark); background: none; border: none; cursor: pointer; font-family: inherit; font-weight: 600; }
+.link-action:hover { text-decoration: underline; }
+.link-action.danger { color: #dc2626; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+.form-grid > div { display: flex; flex-direction: column; }
+.form-col-2 { grid-column: span 2; }
+.form-sep { border: none; border-top: 1px solid var(--stone-200); margin: 18px 0; }
+.form-section-title { font-size: 15px; margin: 0 0 10px; color: var(--green-dark); }
+.checks { display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+.checks label { display: flex; align-items: center; gap: 8px; font-weight: 400; }
+.checks input { width: 16px; height: 16px; }
+
+@media (max-width: 800px) {
+  .admin-cols, .stat-grid, .form-grid { grid-template-columns: 1fr; }
+  .admin-sidebar { width: 64px; }
+  .admin-brand span:last-child, .admin-nav a span, .admin-sidebar-foot a, .admin-logout { font-size: 0; }
+  .admin-nav a { text-align: center; }
+}

@@ -1,0 +1,63 @@
+@model Quote
+@{
+    ViewData["Title"] = $"Báo giá {Model.Code}";
+    Layout = "_AdminLayout";
+}
+
+<a href="/quan-tri/bao-gia" class="muted" style="font-size:14px">← Quay lại danh sách</a>
+
+<div class="admin-cols" style="margin-top:12px">
+    <div class="admin-panel">
+        <div class="admin-panel-head"><h2>@Model.Code</h2><span class="tag">@Model.Status</span></div>
+        <table class="table">
+            <thead><tr><th>Sản phẩm</th><th>Khối lượng</th><th>Ghi chú</th></tr></thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.Product?.Name</td>
+                        <td><b>@Format.Quantity(item.Quantity)</b></td>
+                        <td class="muted">@item.Note</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (!string.IsNullOrEmpty(Model.Note))
+        {
+            <div class="card" style="margin-top:12px;white-space:pre-line">@Model.Note</div>
+        }
+    </div>
+
+    <div>
+        <div class="admin-panel">
+            <div class="admin-panel-head"><h2>Khách hàng</h2></div>
+            <p style="margin:4px 0"><b>@Model.FullName</b></p>
+            @if (!string.IsNullOrEmpty(Model.CompanyName)) { <p class="muted" style="margin:4px 0">@Model.CompanyName</p> }
+            <p style="margin:4px 0">☎ <a href="tel:@Model.Phone">@Model.Phone</a></p>
+            @if (!string.IsNullOrEmpty(Model.Email)) { <p style="margin:4px 0">✉ @Model.Email</p> }
+            <p class="muted" style="margin:4px 0;font-size:13px">Gửi lúc @Model.CreatedAt.ToString("HH:mm dd/MM/yyyy")</p>
+        </div>
+
+        <div class="admin-panel" style="margin-top:16px">
+            <div class="admin-panel-head"><h2>Cập nhật trạng thái</h2></div>
+            <form method="post" action="/quan-tri/bao-gia/@Model.Id/trang-thai">
+                @Html.AntiForgeryToken()
+                <select name="status" class="field">
+                    @foreach (var s in Enum.GetValues<QuoteStatus>())
+                    {
+                        if (s == Model.Status)
+                        {
+                            <option value="@s" selected>@s</option>
+                        }
+                        else
+                        {
+                            <option value="@s">@s</option>
+                        }
+                    }
+                </select>
+                <button type="submit" class="btn btn-primary btn-block">Lưu trạng thái</button>
+            </form>
+            <p class="muted" style="font-size:12px;margin-top:8px">Pending → Processing → Quoted → Accepted → Converted</p>
+        </div>
+    </div>
+</div>

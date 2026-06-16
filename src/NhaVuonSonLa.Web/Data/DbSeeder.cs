@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using NhaVuonSonLa.Web.Models;
+using NhaVuonSonLa.Web.Services;
 
 namespace NhaVuonSonLa.Web.Data;
 
@@ -8,8 +9,33 @@ public static class DbSeeder
 {
     public static void Seed(AppDbContext db)
     {
-        db.Database.EnsureCreated();
-        if (db.Products.Any()) return; // đã có dữ liệu → bỏ qua
+        // Áp dụng migration → tự tạo/cập nhật schema DB (kể cả khi thêm bảng mới).
+        // Nếu file DB cũ (tạo bằng cách cũ, chưa có lịch sử migration) gây xung đột,
+        // tạo lại sạch — dữ liệu chỉ là mẫu nên an toàn.
+        try
+        {
+            db.Database.Migrate();
+        }
+        catch
+        {
+            db.Database.EnsureDeleted();
+            db.Database.Migrate();
+        }
+
+        // Tài khoản admin mặc định (đăng nhập trang quản trị)
+        if (!db.Users.Any())
+        {
+            db.Users.Add(new AppUser
+            {
+                Email = "admin@nhavuonsonla.vn",
+                FullName = "Quản trị viên",
+                Role = UserRole.Admin,
+                PasswordHash = PasswordHasher.Hash("Admin@123"),
+            });
+            db.SaveChanges();
+        }
+
+        if (db.Products.Any()) return; // đã có dữ liệu sản phẩm → bỏ qua
 
         var cats = new Dictionary<string, Category>
         {

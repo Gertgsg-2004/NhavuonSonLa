@@ -1,0 +1,29 @@
+@{
+    ViewData["Title"] = "Đăng nhập quản trị";
+}
+<div class="container" style="max-width:420px;padding:60px 16px">
+    <h1 style="margin:0 0 6px;text-align:center">Đăng nhập quản trị</h1>
+    <p class="muted text-center" style="margin:0 0 20px">Khu vực dành cho quản trị viên / nhân viên nhà vườn.</p>
+
+    <form method="post" action="/dang-nhap" class="card">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+        @if (ViewBag.Error != null)
+        {
+            <div class="form-error">@ViewBag.Error</div>
+        }
+        <label>Email</label>
+        <input class="field" name="email" type="email" placeholder="admin@@nhavuonsonla.vn" required autofocus />
+        <label>Mật khẩu</label>
+        <input class="field" name="password" type="password" placeholder="••••••••" required />
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:8px">Đăng nhập</button>
+    </form>
+
+    <div class="card" style="margin-top:16px;background:var(--green-50);border-color:#bbf7d0">
+        <p style="margin:0;font-size:13px" class="muted">
+            <b>Tài khoản mẫu:</b><br />
+            Email: <code>admin@@nhavuonsonla.vn</code><br />
+            Mật khẩu: <code>Admin@@123</code>
+        </p>
+    </div>
+</div>

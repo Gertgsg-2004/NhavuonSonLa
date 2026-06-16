@@ -1,0 +1,122 @@
+@model ProductFormViewModel
+@{
+    var isEdit = Model.Id != 0;
+    ViewData["Title"] = isEdit ? $"Sửa: {Model.Name}" : "Thêm sản phẩm";
+    Layout = "_AdminLayout";
+    var action = isEdit ? $"/quan-tri/san-pham/sua/{Model.Id}" : "/quan-tri/san-pham/them";
+}
+
+<a href="/quan-tri/san-pham" class="muted" style="font-size:14px">← Quay lại danh sách</a>
+
+<form method="post" action="@action" class="admin-panel" style="margin-top:12px;max-width:860px">
+    @Html.AntiForgeryToken()
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="form-error">@Html.ValidationSummary(false)</div>
+    }
+
+    <div class="form-grid">
+        <div class="form-col-2">
+            <label>Tên sản phẩm *</label>
+            <input class="field" name="Name" value="@Model.Name" required />
+        </div>
+        <div>
+            <label>Đường dẫn (slug) — để trống sẽ tự tạo</label>
+            <input class="field" name="Slug" value="@Model.Slug" placeholder="vd: xoai-tron-yen-chau" />
+        </div>
+        <div>
+            <label>Danh mục</label>
+            <select class="field" name="CategoryId">
+                @foreach (var c in Model.Categories)
+                {
+                    if (c.Id == Model.CategoryId)
+                    {
+                        <option value="@c.Id" selected>@c.Name</option>
+                    }
+                    else
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                }
+            </select>
+        </div>
+        <div>
+            <label>Vùng trồng</label>
+            <input class="field" name="GrowingRegion" value="@Model.GrowingRegion" placeholder="Yên Châu" />
+        </div>
+        <div>
+            <label>Thời gian thu hoạch</label>
+            <input class="field" name="HarvestPeriod" value="@Model.HarvestPeriod" placeholder="Tháng 5 – 8" />
+        </div>
+        <div>
+            <label>Nguồn gốc giống</label>
+            <input class="field" name="Origin" value="@Model.Origin" />
+        </div>
+        <div>
+            <label>Đơn vị</label>
+            <input class="field" name="Unit" value="@Model.Unit" />
+        </div>
+        <div>
+            <label>Khối lượng đặt tối thiểu</label>
+            <input class="field" name="MinOrderQuantity" type="number" step="1" value="@Model.MinOrderQuantity" />
+        </div>
+        <div class="form-col-2">
+            <label>Mô tả ngắn</label>
+            <input class="field" name="ShortDescription" value="@Model.ShortDescription" />
+        </div>
+        <div class="form-col-2">
+            <label>Mô tả chi tiết (xuống dòng 2 lần để tách đoạn)</label>
+            <textarea class="field" name="Description" rows="4">@Model.Description</textarea>
+        </div>
+    </div>
+
+    <hr class="form-sep" />
+    <h3 class="form-section-title">Giá &amp; hiển thị</h3>
+    <div class="form-grid">
+        <div>
+            <label>Giá lẻ tham khảo (đ) — để trống = chỉ báo giá</label>
+            <input class="field" name="RetailPrice" type="number" step="100" value="@(Model.RetailPrice?.ToString("0"))" />
+        </div>
+        <div>
+            <label>Bảng giá bậc — mỗi dòng <code>khốilượng=giá</code></label>
+            <textarea class="field" name="PriceTiersText" rows="5" placeholder="10=35000&#10;100=30000&#10;1000=25000">@Model.PriceTiersText</textarea>
+        </div>
+        <div class="checks">
+            <label><input type="checkbox" name="IsPriceVisible" value="true" @(Model.IsPriceVisible ? "checked" : "") /> Hiện giá cho khách lẻ (bỏ chọn = "Liên hệ báo giá")</label>
+            <label><input type="checkbox" name="IsFeatured" value="true" @(Model.IsFeatured ? "checked" : "") /> Sản phẩm nổi bật (trang chủ)</label>
+            <label><input type="checkbox" name="IsExportQuality" value="true" @(Model.IsExportQuality ? "checked" : "") /> Đạt chuẩn xuất khẩu</label>
+        </div>
+        <div>
+            <label>Trạng thái</label>
+            <select class="field" name="Status">
+                @foreach (var s in Enum.GetValues<ProductStatus>())
+                {
+                    if (s == Model.Status)
+                    {
+                        <option value="@s" selected>@s</option>
+                    }
+                    else
+                    {
+                        <option value="@s">@s</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+
+    <hr class="form-sep" />
+    <h3 class="form-section-title">Mùa vụ &amp; tiêu chuẩn</h3>
+    <div class="form-grid">
+        <div><label>Tháng bắt đầu vụ (1-12)</label><input class="field" name="SeasonStartMonth" type="number" min="1" max="12" value="@Model.SeasonStartMonth" /></div>
+        <div><label>Tháng kết thúc vụ</label><input class="field" name="SeasonEndMonth" type="number" min="1" max="12" value="@Model.SeasonEndMonth" /></div>
+        <div><label>Tháng rộ vụ</label><input class="field" name="SeasonPeakMonth" type="number" min="1" max="12" value="@Model.SeasonPeakMonth" /></div>
+        <div><label>Chứng nhận (cách nhau dấu phẩy)</label><input class="field" name="Certifications" value="@Model.Certifications" placeholder="VietGAP,GlobalGAP" /></div>
+        <div><label>Emoji minh họa</label><input class="field" name="Emoji" value="@Model.Emoji" /></div>
+        <div><label>Màu nền (CSS gradient)</label><input class="field" name="Gradient" value="@Model.Gradient" /></div>
+    </div>
+
+    <div style="margin-top:18px;display:flex;gap:10px">
+        <button type="submit" class="btn btn-primary">@(isEdit ? "Lưu thay đổi" : "Thêm sản phẩm")</button>
+        <a href="/quan-tri/san-pham" class="btn" style="background:var(--stone-200);color:var(--stone-700)">Hủy</a>
+    </div>
+</form>

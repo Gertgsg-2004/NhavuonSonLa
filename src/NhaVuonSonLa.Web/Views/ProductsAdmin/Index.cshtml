@@ -1,0 +1,70 @@
+@model List<Product>
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    Layout = "_AdminLayout";
+}
+
+<div class="admin-panel">
+    <div class="admin-panel-head">
+        <h2>@Model.Count sản phẩm</h2>
+        <a href="/quan-tri/san-pham/them" class="btn btn-primary" style="padding:8px 16px">+ Thêm sản phẩm</a>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr><th>Sản phẩm</th><th>Danh mục</th><th>Giá / bậc</th><th>Trạng thái</th><th>Hiển thị giá</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <span style="font-size:22px">@p.Emoji</span>
+                            <div>
+                                <b>@p.Name</b>
+                                <div class="muted" style="font-size:12px">@p.GrowingRegion · @p.HarvestPeriod</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>@p.Category?.Name</td>
+                    <td>
+                        @if (p.PriceOnRequest)
+                        {
+                            <span class="muted">Liên hệ</span>
+                        }
+                        else
+                        {
+                            <span>@Format.Vnd(p.RetailPrice ?? 0)</span>
+                            <div class="muted" style="font-size:12px">@p.PriceTiers.Count bậc giá</div>
+                        }
+                    </td>
+                    <td>
+                        @{
+                            var (cls, label) = p.Status switch
+                            {
+                                ProductStatus.Active => ("badge-season-in", "Đang bán"),
+                                ProductStatus.Hidden => ("badge-season-off", "Đã ẩn"),
+                                _ => ("badge-season-up", "Hết mùa"),
+                            };
+                        }
+                        <span class="badge @cls">@label</span>
+                    </td>
+                    <td>@(p.IsPriceVisible ? "✓ Công khai" : "🔒 Ẩn khách lẻ")</td>
+                    <td style="white-space:nowrap">
+                        <a href="/quan-tri/san-pham/sua/@p.Id" class="link-action">Sửa</a>
+                        <form method="post" action="/quan-tri/san-pham/an-hien/@p.Id" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="link-action">@(p.Status == ProductStatus.Hidden ? "Hiện" : "Ẩn")</button>
+                        </form>
+                        <form method="post" action="/quan-tri/san-pham/xoa/@p.Id" style="display:inline"
+                              onsubmit="return confirm('Xóa sản phẩm &quot;@p.Name&quot;? Không thể hoàn tác.');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="link-action danger">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

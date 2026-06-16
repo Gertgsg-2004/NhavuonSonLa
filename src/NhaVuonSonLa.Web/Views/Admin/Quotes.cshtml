@@ -1,58 +1,47 @@
 @model List<Quote>
 @{
-    ViewData["Title"] = "Quản trị — Yêu cầu báo giá";
+    ViewData["Title"] = "Yêu cầu báo giá";
+    Layout = "_AdminLayout";
+    var current = ViewBag.StatusFilter as QuoteStatus?;
+    var statuses = Enum.GetValues<QuoteStatus>();
 }
-<div class="container" style="padding:32px 16px">
-    <h1 style="margin:0">Yêu cầu báo giá nhận được</h1>
-    <p class="muted">Trang quản trị tối giản. Giai đoạn sau bổ sung: đăng nhập, định giá từng dòng, xuất PDF, chuyển đơn, quản lý sản phẩm/kho/khách hàng.</p>
+
+<div class="admin-panel">
+    <div class="filter-pills">
+        <a href="/quan-tri/bao-gia" class="pill @(current == null ? "active" : "")">Tất cả</a>
+        @foreach (var s in statuses)
+        {
+            <a href="/quan-tri/bao-gia?status=@s" class="pill @(current == s ? "active" : "")">@s</a>
+        }
+    </div>
 
     @if (!Model.Any())
     {
-        <div class="empty-box" style="margin-top:24px">
-            Chưa có yêu cầu báo giá nào. Hãy thử gửi một yêu cầu từ <a style="color:var(--green-dark)" asp-controller="Products" asp-action="Index">trang sản phẩm</a>.
-        </div>
+        <div class="empty-box">Chưa có yêu cầu báo giá nào khớp.</div>
     }
     else
     {
-        <table class="table" style="margin-top:20px">
-            <thead>
-                <tr><th>Mã</th><th>Khách hàng</th><th>Liên hệ</th><th>Sản phẩm yêu cầu</th><th>Thời gian</th><th>Trạng thái</th></tr>
-            </thead>
+        <table class="table">
+            <thead><tr><th>Mã</th><th>Khách hàng</th><th>Liên hệ</th><th>Sản phẩm</th><th>Thời gian</th><th>Trạng thái</th><th></th></tr></thead>
             <tbody>
                 @foreach (var q in Model)
                 {
                     <tr>
                         <td><b>@q.Code</b></td>
-                        <td>
-                            @q.FullName
-                            @if (!string.IsNullOrEmpty(q.CompanyName))
-                            {
-                                <div class="muted" style="font-size:12px">@q.CompanyName</div>
-                            }
-                        </td>
-                        <td>
-                            @q.Phone
-                            @if (!string.IsNullOrEmpty(q.Email))
-                            {
-                                <div class="muted" style="font-size:12px">@q.Email</div>
-                            }
-                        </td>
+                        <td>@q.FullName @if (!string.IsNullOrEmpty(q.CompanyName)) { <div class="muted" style="font-size:12px">@q.CompanyName</div> }</td>
+                        <td>@q.Phone</td>
                         <td>
                             @foreach (var item in q.Items)
                             {
                                 <div style="font-size:13px">@item.Product?.Name — <b>@Format.Quantity(item.Quantity)</b></div>
                             }
-                            @if (!string.IsNullOrEmpty(q.Note))
-                            {
-                                <div class="muted" style="font-size:12px;margin-top:4px;white-space:pre-line">@q.Note</div>
-                            }
                         </td>
                         <td class="muted" style="font-size:13px">@q.CreatedAt.ToString("HH:mm dd/MM/yyyy")</td>
                         <td><span class="tag">@q.Status</span></td>
+                        <td><a href="/quan-tri/bao-gia/@q.Id">Chi tiết →</a></td>
                     </tr>
                 }
             </tbody>
         </table>
     }
 </div>
-<div style="height:40px"></div>

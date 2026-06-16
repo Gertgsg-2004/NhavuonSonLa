@@ -29,3 +29,11 @@ public enum CustomerType
     NhaHang,    // Nhà hàng
     XuatKhau    // Công ty xuất khẩu
 }
+
+/// <summary>Vai trò tài khoản hệ thống.</summary>
+public enum UserRole
+{
+    Admin,   // Toàn quyền
+    Staff,   // Nhân viên: đơn, báo giá, kho
+    Dealer   // Đại lý
+}
